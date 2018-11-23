@@ -1,10 +1,37 @@
 local component = {}
 
+function component.input()
+    return true
+end
+
 function component.controller(moveSpeed, jumpSpeed)
     return {
+        horizontal = 0,
+        vertical = 0,
+        jump = false,
         moveSpeed = moveSpeed,
         jumpSpeed = jumpSpeed,
-        isGrounded = false 
+        isGripping_R = false,
+        isGripping_L = false
+    }
+end
+
+function component.wallslide()
+    return {
+        left = false,
+        right = false
+    }
+end
+
+function component.gripper(gripTime, gripJumpSpeed)
+    return {
+        gripResetTime = gripTime,
+        isGripping = false,
+        canGrip = true,
+        reset = false,
+        gripTime = gripTime,
+        canJump = true,
+        jumpSpeed = gripJumpSpeed
     }
 end
 
@@ -42,19 +69,29 @@ function component.collider(w,h)
     }
 end
 
-function component.sprite(path, origin_x, origin_y)
+function component.crouch(h, original_h)
+    return {
+        h = h,
+        original_h = original_h
+    }
+
+end
+
+function component.sprite(path, origin_x, origin_y, scale)
     if path == "placeholder" then
         return {
             image = path,
             origin_x = origin_x,
-            origin_y = origin_y
+            origin_y = origin_y,
+            scale = 1
         }
 
     else
         return {
             image = love.graphics.newImage(path),
             origin_x = origin_x,
-            origin_y = origin_y
+            origin_y = origin_y,
+            scale = scale
         }
     end
 end

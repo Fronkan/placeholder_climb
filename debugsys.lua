@@ -19,4 +19,20 @@ function debugsys.Collider()
     return debug_collider
 end
 
+
+
+function debugsys.FlyController()
+    controller = tiny.processingSystem()
+    
+    controller.filter = tiny.requireAll("velocity", "controller")
+    
+    function controller:process(entity)
+        entity.velocity.x = entity.controller.horizontal * entity.controller.moveSpeed
+        entity.velocity.y = entity.controller.vertical * entity.controller.moveSpeed
+
+    end
+
+    return controller
+end
+
 return debugsys
