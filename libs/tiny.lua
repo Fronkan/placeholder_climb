@@ -321,8 +321,10 @@ local function processingSystemUpdate(system, dt)
             end
         else
             local entities = system.entities
-            for i = 1, #entities do
-                process(system, entities[i], dt)
+            if entities then
+                for i = 1, #entities do
+                    process(system, entities[i], dt)
+                end
             end
         end
     end

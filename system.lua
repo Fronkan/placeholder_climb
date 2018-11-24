@@ -2,7 +2,6 @@ local tiny = require("libs/tiny")
 local bump = require("libs/bump")
 local entity = require("entity")
 local vector = require("libs/hump/vector")
-
 local system = {}
 
 ----------------------------------- DRAW -----------------------------------
@@ -25,8 +24,11 @@ function system.Draw()
                     entity.placeholder_color.g,
                     entity.placeholder_color.b)
             end
-            love.graphics.rectangle("fill",entity.position.x ,entity.position.y,entity.sprite.origin_x,entity.sprite.origin_y)
-            
+            if entity.isCrouching and entity.crouch then
+                love.graphics.rectangle("fill",entity.position.x ,entity.position.y,entity.sprite.origin_x,entity.crouch.h)
+            else
+                love.graphics.rectangle("fill",entity.position.x ,entity.position.y,entity.sprite.origin_x,entity.sprite.origin_y)
+            end
             if original_color then
                 love.graphics.setColor(original_color.r, original_color.g, original_color.b)
             end
@@ -241,6 +243,47 @@ function system.MoveWithCollision()
             return
         end
 
+        if entity.crouch then
+            local diff = entity.crouch.h - entity.crouch.original_h
+
+            if entity.isCrouching and entity.collider.h ~= entity.crouch.h then
+                entity.collider.h = entity.crouch.h
+                pos.y = pos.y - diff
+                self.bumpWorld:update(
+                    entity,
+                    pos.x,
+                    pos.y,
+                    entity.collider.w,
+                    entity.crouch.h
+                )
+            elseif not entity.isCrouching then
+                function filter(item)
+                    if item.controller then return false else return true end
+                end
+                if entity.collider.h ~= entity.crouch.original_h then
+                    cols, len = self.bumpWorld:queryRect(
+                        pos.x,
+                        pos.y + diff,
+                        entity.collider.w,
+                        entity.crouch.original_h,
+                        filter
+                    )
+                    if len == 0 then
+                        entity.collider.h = entity.crouch.original_h
+                        self.bumpWorld:update(
+                            entity,
+                            pos.x,
+                            pos.y - (entity.crouch.original_h - entity.crouch.h),
+                            entity.collider.w,
+                            entity.crouch.original_h
+                        )
+                    else
+                        entity.isCrouching = true
+                    end
+                end
+            end   
+        end
+
         local vel = entity.velocity
         local actualX, actualY, cols, numCols = self.bumpWorld:move(entity, pos.x + vel.x * dt, pos.y + vel.y * dt, self.collisionFilter)
         pos.x = actualX
@@ -391,7 +434,7 @@ end
 ----------------------------------- WORLD GENERATOR -----------------------------------
 
 
-local blocks = {{w=200, h=200},{w=100, h=300},{w=300, h=100}, {w=100,h=100}, {w=400,h=50}}
+local blocks = {{w=200, h=200},{w=200, h=300},{w=200, h=50}, {w=100,h=100}, {w=300,h=50}}
 
 function system.WorldGenerator(limit_x,chunk_size_y, ecs_world)
     local world_generator = tiny.processingSystem()
@@ -407,9 +450,9 @@ function system.WorldGenerator(limit_x,chunk_size_y, ecs_world)
         --w = love.graphics.getWidth()/2
         --h = love.math.random(100, 300)
         --h = chunk_size_y
-        local blocks_to_spawn = 8
+        local blocks_to_spawn = 20
         positions = {}
-        time_out = 40
+        time_out = 20 * blocks_to_spawn
         time_cnt = 0
         while #positions <=blocks_to_spawn do
             local new_pos = vector(love.math.random(0, limit_x), center_y - love.math.random(0, chunk_size_y))
@@ -477,5 +520,51 @@ function system.WorldGenerator(limit_x,chunk_size_y, ecs_world)
     return world_generator
 end
 
+----------------------------------- SCORE -----------------------------------
+function system.ScoreCount()
+    local score = tiny.processingSystem()
+    score.filter = tiny.requireAll("scorecounter", "position")
+    local start_pos = 0    
+    function calc_score(pos_y)
+
+        return math.floor((-pos_y + start_pos)/10)
+    end
+    local is_first = true
+
+    function score:process(entity)
+        if is_first then
+            start_pos = entity.position.y
+            is_first = false
+        end
+        local offset_y = love.graphics.getHeight()/2
+        --love.graphics.translate(-entity.position.x + offset_x,0)-- -entity.position.y + offset_y)
+        love.graphics.translate(0,-entity.position.y + offset_y)
+        local sc = entity.scorecounter
+        local newScore = calc_score(entity.position.y)
+        if sc.score <= newScore then
+            sc.score = newScore
+        end
+        sc.y = entity.position.y - offset_y
+    end
+    return score
+end
+
+
+function system.WriteScore()
+    local sc_draw = tiny.processingSystem()
+    sc_draw.filter = tiny.requireAll("scorecounter")
+
+    function sc_draw:process(entity)
+        local sc = entity.scorecounter
+        local r,g,b,a = love.graphics.getColor()
+        love.graphics.setColor(0,0,0,1)
+        love.graphics.printf("Score: " .. sc.score, sc.x,sc.y, 400, "left", 0)
+        love.graphics.setColor(r,g,b,a)
+
+    end
+    sc_draw.active = false
+
+    return sc_draw
+end
 
 return system

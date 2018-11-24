@@ -1,16 +1,29 @@
 local component = require "component"
 
-
 local entity = {}
 
 function entity.Player(x, y)
-    return {
+    local w = 50
+    local h = 130
+    function die(sc)
+        function die_fkn()
+            if game.highscore <= sc.score then
+                game.highscore = sc.score
+                game:saveScore()
+            end
+            love.load()
+        end
+        return die_fkn
+    end
+    local player =  {
+        name = "player",
         camerafollow = true,
+        scorecounter = component.scorecounter(),
         position = component.position(x,y),
         velocity = component.velocity(),
-        sprite = component.sprite("placeholder", 50,130),
-        collider = component.collider(50, 130),
-        crouch = component.crouch(90,130),
+        sprite = component.sprite("placeholder", w,h),
+        collider = component.collider(w, h),
+        crouch = component.crouch(90,h),
         overlay = {image="costume"},
         costume = {"monocle","mustasch"},
         mustasch = component.sprite("assets/mustasch.png", -30,30, 0.3),
@@ -21,12 +34,14 @@ function entity.Player(x, y)
         rigidbody = component.rigidbody(1000),
         gripper = component.gripper(2, 700),
         wallslide = component.wallslide(),
-        destroy = love.load -- This will reset the games, change to a level reset function later 
     }
+    player.destroy = die(player.scorecounter)
+    return player
 end
 
 function entity.DebugFlyPlayer(x,y)
     return {
+        name = "debugflyplayer",
         camerafollow = true,
         position = component.position(x,y),
         velocity = component.velocity(),
@@ -41,6 +56,7 @@ end
 
 function entity.Platform(x,y,w,h)
     return {
+        name = "platform",
         position = component.position(x,y),
         sprite = component.sprite("placeholder", w,h),
         collider = component.collider(w,h),
@@ -51,7 +67,8 @@ function  entity.lava()
     local w = love.graphics.getWidth() + 1000
     local h = love.graphics.getHeight()
     return{
-        position = component.position(-500,100),
+        name = "lava",
+        position = component.position(-500,400),
         velocity = component.velocity(0, -100),
         overlay = component.sprite(
             "placeholder", 

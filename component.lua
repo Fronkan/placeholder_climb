@@ -16,6 +16,14 @@ function component.controller(moveSpeed, jumpSpeed)
     }
 end
 
+function component.scorecounter()
+    return {
+        score = 0,
+        x = 0,
+        y = 0,
+    }
+end
+
 function component.wallslide()
     return {
         left = false,
