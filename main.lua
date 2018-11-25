@@ -88,7 +88,8 @@ function game.load_level()
 end
 
 function love.load()
-    print("loaded")
+    menu.controlls = love.graphics.newImage("assets/controlls.png")
+    menu.mustasch = love.graphics.newImage("assets/mustasch.png")
     menu.button_w = 300
     menu.button_x = love.graphics.getWidth()/2 - menu.button_w/2
     menu.button_y = 100
@@ -132,6 +133,8 @@ function love.update(dt)
         menu.button_w,
         menu.button_h )
 
+
+
     elseif game.state == "level" then
         game.ecs:update(dt)
     end
@@ -147,6 +150,17 @@ function love.draw()
         game.manualUpdateSystems.write_score:update()
         --game.manualUpdateSystems.debug_collider:update()
     elseif game.state == "menu" then
+        love.graphics.draw(
+            menu.controlls,
+            menu.button_x +350 ,
+            menu.button_y + menu.button_h -100,
+            0,0.7,0.7)
+        love.graphics.draw(
+            menu.mustasch,
+            menu.button_x  -45,
+            menu.button_y + menu.button_h*3,
+            0,1,1)
+
         suit.draw()
     end
 end
