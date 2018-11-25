@@ -1,5 +1,6 @@
 # Placeholder climb
 ![cover_image](cover_image.png)
+
 The game was created as a part of the game jam: https://itch.io/jam/kodsnacks-2veckorssylt.
 Around the theme of mustasch and platformer. It is created using the game engine: löve/love2d
 
