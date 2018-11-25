@@ -1,0 +1,15 @@
+[submodule "bitser"]
+  path = libs/bitser
+  url = https://github.com/gvx/bitser
+
+[submodule "hump"]
+  path = libs/hump
+  url = https://github.com/vrld/hump
+
+[submodule "suit"]
+  path = libs/suit
+  url = https://github.com/vrld/SUIT
+
+[submodule "sti"]
+  path = libs/sti
+  url = https://github.com/karai17/Simple-Tiled-Implementation
