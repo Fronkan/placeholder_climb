@@ -2,6 +2,9 @@ local tiny = require("libs/tiny")
 local bump = require("libs/bump")
 local entity = require("entity")
 local vector = require("libs/hump/vector")
+require("utils")
+
+
 local system = {}
 
 ----------------------------------- DRAW -----------------------------------
@@ -223,6 +226,19 @@ function system.Gravity()
     return gravity
 end 
 
+function system.Accelerator()
+    local acc_sys = tiny.processingSystem()
+    acc_sys.filter = tiny.requireAll("velocity", "acceleration")
+
+    function acc_sys:process(entity, dt)
+        local vel = entity.velocity
+        local acc = entity.acceleration
+        vel.y = vel.y + acc.y*dt
+        vel.x = vel.x + acc.x*dt
+    end
+    return acc_sys
+end
+
 
 function system.MoveWithCollision()
     local moveWithCollision = tiny.processingSystem()   
@@ -284,7 +300,11 @@ function system.MoveWithCollision()
             end   
         end
 
+        -- We know we have velocity because of guard clause in top of function.
         local vel = entity.velocity
+        vel.y = clamp_abs(vel.y, vel.max_y)
+        vel.x = clamp_abs(vel.x, vel.max_x)
+        
         local actualX, actualY, cols, numCols = self.bumpWorld:move(entity, pos.x + vel.x * dt, pos.y + vel.y * dt, self.collisionFilter)
         pos.x = actualX
         pos.y = actualY
@@ -373,44 +393,14 @@ function system.Camera()
     camera.active = false
 
     function camera:process(entity, dt)
-        local offset_y = love.graphics.getHeight()/2
-        local offset_x = love.graphics.getWidth()/2
-        --love.graphics.translate(-entity.position.x + offset_x,0)-- -entity.position.y + offset_y)
-        love.graphics.translate(0,-entity.position.y + offset_y)
+        local pos = entity.position
+        --local dx,dy = pos.x - game.camera.x, pos.y - game.camera.y
+        local dx,dy = 0, pos.y - game.camera.y
+        game.camera:move(dx/2, dy/2)
     end
 
     return camera
 end
--- Potential solution if camera is of type system istead of processing system. 
--- Might be good if multiple targets is used
---[[
-function system.camera:update(dt)
-    local entities = self.world.entities
-    local filter = self.filter
-    local x = 0
-    local y = 0
-    local numTargets = 0
-    
-    if filter then
-        for i = 1, #entities do
-            local entity = entities[i]
-            if filter(system, entity) then
-                x = x + entity.position.x 
-                y = y + entity.position.y
-                numTargets = numTargets +1
-            end
-        end
-        if numTargets ~= 0 then
-            x = x/numTargets
-            y = y/numTargets
-        end
-    end
-    local offset_y = love.graphics.getHeight()/2
-    local offset_x = love.graphics.getWidth()/2
-    love.graphics.translate(-x + offset_x, -y + offset_y)
-end
-
-]]--
 
 -- Removes items outside the world bounderies from the ecs system and calls their destory method
 function system.OutOfBounds(limit_x, limit_y)
@@ -434,9 +424,9 @@ end
 ----------------------------------- WORLD GENERATOR -----------------------------------
 
 
-local blocks = {{w=200, h=200},{w=200, h=300},{w=200, h=50}, {w=100,h=100}, {w=300,h=50}}
+local blocks = {{w=200, h=200},{w=100, h=300},{w=150, h=50}, {w=100,h=100}, {w=100,h=30}, {w=50,h=200}, {w=50,h=50}}
 
-function system.WorldGenerator(limit_x,chunk_size_y, ecs_world)
+function system.WorldGenerator(chunk_size_x,chunk_size_y, ecs_world)
     local world_generator = tiny.processingSystem()
     world_generator.filter = tiny.requireAll("controller", "position")
 
@@ -450,12 +440,12 @@ function system.WorldGenerator(limit_x,chunk_size_y, ecs_world)
         --w = love.graphics.getWidth()/2
         --h = love.math.random(100, 300)
         --h = chunk_size_y
-        local blocks_to_spawn = 20
+        local blocks_to_spawn = 35
         positions = {}
         time_out = 20 * blocks_to_spawn
         time_cnt = 0
         while #positions <=blocks_to_spawn do
-            local new_pos = vector(love.math.random(0, limit_x), center_y - love.math.random(0, chunk_size_y))
+            local new_pos = vector(love.math.random(-chunk_size_x/2, chunk_size_x/2), center_y - love.math.random(0, chunk_size_y))
             local too_close  = false
             for i,vec in ipairs(positions) do
                 --print(vec)

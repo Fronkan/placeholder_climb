@@ -57,10 +57,19 @@ function component.position(x,y)
     }
 end
 
-function component.velocity(x,y)
+function component.velocity(x,y, max_x, max_y)
     return {
         x = x or 0,
-        y = y or 0
+        y = y or 0,
+        max_x = max_x or math.huge,
+        max_y = max_y or math.huge
+    }
+end
+
+function component.acceleration(x,y)
+    return {
+        x=x,
+        y=y
     }
 end
 

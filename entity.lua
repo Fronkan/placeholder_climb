@@ -69,7 +69,7 @@ function  entity.lava()
     return{
         name = "lava",
         position = component.position(-500,400),
-        velocity = component.velocity(0, -100),
+        velocity = component.velocity(0, -80, 0, 220),
         overlay = component.sprite(
             "placeholder", 
             w,
@@ -78,6 +78,7 @@ function  entity.lava()
         collider = component.collider(w,h),
         placeholder_color = {r=255,b=0,g=0},
         damage = true,
+        acceleration = component.acceleration(1,-6)
     }
 end
 
